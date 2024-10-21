@@ -1,278 +1,265 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 
-import plotly.express as px
-
-# Mock dos dados da planilha de orçamentos
-planilha = {
-    "Sprint 1": pd.DataFrame(
-        {
-            "Tarefa": ["H1", "H2", "H3", "H4"],
-            "Junior": [2, 1, 1, 0],
-            "Pleno": [1, 0, 0, 0],
-            "Senior": [1, 0, 0, 0],
-            "Total": [2.5, 1.5, 1, 0],
-            "Custo Junior": [595.24, 178.57, 119.05, 0],
-            "Custo Pleno": [231.90, 0, 0, 0],
-            "Custo Senior": [368.33, 0, 0, 0],
-        }
-    ),
-    "Sprint 2": pd.DataFrame(
-        {
-            "Tarefa": ["H1", "H2", "H3", "H4"],
-            "Junior": [4, 2, 1, 1],
-            "Pleno": [1, 0, 0, 0],
-            "Senior": [1, 0, 0, 0],
-            "Total": [3, 1.5, 1.5, 1.5],
-            "Custo Junior": [1428.57, 357.14, 178.57, 178.57],
-            "Custo Pleno": [231.90, 0, 0, 0],
-            "Custo Senior": [368.33, 0, 0, 0],
-        }
-    ),
-    "Sprint 3": pd.DataFrame(
-        {
-            "Tarefa": ["H1", "H2", "H3", "H4"],
-            "Junior": [2, 1, 1, 0],
-            "Pleno": [1, 0, 0, 0],
-            "Senior": [1, 0, 0, 0],
-            "Total": [2, 1.5, 2, 0],
-            "Custo Junior": [476.19, 178.57, 238.10, 0],
-            "Custo Pleno": [231.90, 0, 0, 0],
-            "Custo Senior": [368.33, 0, 0, 0],
-        }
-    ),
-    "Sprint 4": pd.DataFrame(
-        {
-            "Tarefa": ["H1", "H2", "H3", "H4"],
-            "Junior": [4, 2, 2, 0],
-            "Pleno": [1, 0, 0, 0],
-            "Senior": [1, 0, 0, 0],
-            "Total": [3, 1, 2, 0],
-            "Custo Junior": [1428.57, 238.10, 476.19, 0],
-            "Custo Pleno": [231.90, 0, 0, 0],
-            "Custo Senior": [368.33, 0, 0, 0],
-        }
-    ),
-    "Sprint 5": pd.DataFrame(
-        {
-            "Tarefa": ["H1", "H2", "H3", "H4"],
-            "Junior": [2, 2, 0, 0],
-            "Pleno": [1, 0, 0, 0],
-            "Senior": [1, 0, 0, 0],
-            "Total": [2.5, 2, 0, 0],
-            "Custo Junior": [595.24, 476.19, 0, 0],
-            "Custo Pleno": [231.90, 0, 0, 0],
-            "Custo Senior": [368.33, 0, 0, 0],
-        }
-    ),
-}
-
-# Custos gerais da Release
-custos_release = {
-    "Mão de Obra": {
-        "Junior": 7142.86,
-        "Pleno": 2319.00,
-        "Senior": 3683.30,
-        "SM (1/N)": 0,
-        "PO (1/N)": 0,
-        "Total MO": 13145.16,
+# Definição dos cargos e salários padrão
+cargos_salarios = {
+    'Web': {
+        'Dev Junior': 119.05,
+        'Dev Pleno': 231.90,
+        'Dev Senior': 368.33
     },
-    "Lucro Empresa": 6572.58,  # 50% do custo de mão de obra
-    "Custos Fixos": 2629.03,  # 20% do custo de mão de obra
-    "Valor da Release": 22346.77,
+    'Mobile': {
+        'Dev Junior': 151.05,
+        'Dev Pleno': 312.95,
+        'Dev Senior': 552.38
+    },
+    'Outros': {
+        'Scrum M.': 404.76,
+        'Product O.': 397.62
+    }
 }
 
-# Mock dos dados dos tickets
-tickets = pd.DataFrame(
-    {
-        "ID": [1, 2, 3, 4, 5, 6, 8, 7, 9, 10, 11, 12, 15, 13, 14],
-        "Usuários": [
-            "Gerente Geral",
-            "Gerente Geral",
-            "Gerente Geral",
-            "Funcionária do RH",
-            "Funcionária do RH",
-            "Funcionária do RH",
-            "Funcionária do RH",
-            "Funcionária do RH",
-            "Funcionária do RH",
-            "Motorista",
-            "Gerente de Frotas",
-            "Gerente de Frotas",
-            "Gerente Geral",
-            "Técnico de Manutenção",
-            "Técnico de Manutenção",
-        ],
-        "Descrição das histórias": [
-            "Eu quero criar meu perfil e criar minha empresa dentro da plataforma",
-            "Eu quero cadastrar perfis de usuários e quais serão suas atribuições (Permissões)",
-            "Eu quero cadastrar meus funcionários e definir quais serão suas atribuições",
-            "Eu quero cadastrar os caminhões na plataforma para gerenciar suas informações e manutenção",
-            "Eu quero registrar o histórico completo de manutenções e reparos de cada veículo",
-            "Eu quero definir os intervalos de tempo ou quilometragem para manutenções preventiva",
-            "Eu quero cadastrar os diferentes tipos de manutenção necessários para cada veículo",
-            "Eu quero que o sistema agende automaticamente as manutenções com base nos intervalos definidos",
-            "Eu quero receber alertas automáticos quando um veículo estiver próximo de sua manutenção",
-            "Eu quero ser notificado quando meu veículo estiver programado para manutenção",
-            "Eu quero acessar relatórios sobre o estado da manutenção de cada veículo",
-            "Eu quero identificar veículos que estão com manutenção atrasada",
-            "Eu quero verificar qual o estado dos veículos da frota",
-            "Eu quero consultar as manutenções pendentes e o histórico de reparos",
-            "Eu quero registrar o status de cada manutenção realizada",
-        ],
-        "Dias": [2.5, 1.5, 1, 3, 1.5, 1.5, 1.5, 2, 1.5, 2, 3, 1, 2, 2.5, 2],
-    }
-)
+# Mapeamento de nomes abreviados para nomes completos
+nomes_completos = {
+    'Dev Junior': 'Desenvolvedor Junior',
+    'Dev Pleno': 'Desenvolvedor Pleno',
+    'Dev Senior': 'Desenvolvedor Senior',
+    'Scrum M.': 'Scrum Master',
+    'Product O.': 'Product Owner'
+}
 
-# Criar uma interface Streamlit
-st.title("Dashboard de Orçamento por Sprint e Release")
-st.sidebar.title("Opções de Visualização")
+# Lista de story points
+story_points = [0.25, 0.5, 1, 2, 3, 5, 8, 13]
 
-# Selecionar aba para visualizar
-aba_selecionada = st.sidebar.selectbox(
-    "Selecione a Sprint", list(planilha.keys()) + ["Release", "Tickets"]
-)
+# Inicialização do estado da sessão
+if 'sprints' not in st.session_state:
+    st.session_state.sprints = {}
 
-if aba_selecionada == "Release":
-    st.header("Resumo da Release")
-    st.write("### Custos de Mão de Obra")
-    for key, value in custos_release["Mão de Obra"].items():
-        st.write(f"{key}: R$ {value:.2f}")
+if 'salarios' not in st.session_state:
+    st.session_state.salarios = {categoria: {cargo: valor for cargo, valor in cargos.items()} 
+                                 for categoria, cargos in cargos_salarios.items()}
 
-    st.write("### Margens e Custos Adicionais")
-    st.write(
-        f"Percentual de Lucro da Empresa: R$ {custos_release['Lucro Empresa']:.2f}"
-    )
-    st.write(f"Custos Fixos: R$ {custos_release['Custos Fixos']:.2f}")
-    st.write(f"### Valor Total da Release: R$ {custos_release['Valor da Release']:.2f}")
-
-    # Gráfico de custo da Release com Plotly (Gráfico de Rosquinha)
-    categorias = list(custos_release["Mão de Obra"].keys())[:-1] + [
-        "Lucro Empresa",
-        "Custos Fixos",
-    ]
-    valores = list(custos_release["Mão de Obra"].values())[:-1] + [
-        custos_release["Lucro Empresa"],
-        custos_release["Custos Fixos"],
-    ]
-    fig = go.Figure(data=[go.Pie(labels=categorias, values=valores, hole=0.4)])
-    fig.update_layout(title="Distribuição de Custos da Release")
-    st.plotly_chart(fig)
-
-    # Gráfico de quanto é dos desenvolvedores e quanto é da empresa
-    total_mao_de_obra = custos_release["Mão de Obra"]["Total MO"]
-    total_empresa = custos_release["Lucro Empresa"] + custos_release["Custos Fixos"]
-    fig = go.Figure(
-        data=[
-            go.Pie(
-                labels=["Mão de Obra (Devs)", "Empresa (Lucro + Custos Fixos)"],
-                values=[total_mao_de_obra, total_empresa],
-                hole=0.4,
+# Página de configuração de salários
+def configurar_salarios():
+    st.title("Configuração de Salários")
+    
+    st.markdown("Defina os salários médios por dia para cada função:")
+    
+    for categoria, cargos in st.session_state.salarios.items():
+        st.subheader(categoria)
+        for cargo, valor in cargos.items():
+            st.session_state.salarios[categoria][cargo] = st.number_input(
+                f"Salário por dia - {nomes_completos[cargo]}",
+                min_value=0.0,
+                value=float(valor),
+                step=0.01,
+                format="%.2f",
+                key=f"{categoria}_{cargo}"
             )
-        ]
-    )
-    fig.update_layout(title="Distribuição de Custos: Mão de Obra vs Empresa")
-    st.plotly_chart(fig)
+    
+    if st.button("Salvar Configurações"):
+        st.success("Salários salvos com sucesso!")
 
-    # Adicionar gráfico de Gantt para visualização da sequência de execução dos tickets
-    st.write("### Cronograma de Execução dos Tickets")
-    gantt_data = tickets[["ID", "Usuários", "Descrição das histórias", "Dias"]].copy()
-    gantt_data["Início"] = gantt_data["ID"].apply(
-        lambda x: pd.Timestamp("2024-01-01") + pd.to_timedelta(x * 2, unit="D")
-    )
-    gantt_data["Fim"] = gantt_data["Início"] + pd.to_timedelta(
-        gantt_data["Dias"], unit="D"
-    )
-    fig_gantt = px.timeline(
-        gantt_data,
-        x_start="Início",
-        x_end="Fim",
-        y="Usuários",
-        color="ID",
-        title="Cronograma de Execução dos Tickets",
-    )
-    st.plotly_chart(fig_gantt)
+# Página para listar e criar sprints
+def listar_sprints():
+    st.title("Gerenciar Sprints")
+    
+    # Criar nova sprint
+    nova_sprint = st.text_input("Nome da nova sprint:")
+    if st.button("Criar Nova Sprint") and nova_sprint:
+        if nova_sprint not in st.session_state.sprints:
+            st.session_state.sprints[nova_sprint] = {}
+            st.success(f"Sprint '{nova_sprint}' criada com sucesso!")
+        else:
+            st.error("Uma sprint com esse nome já existe.")
+    
+    # Listar sprints existentes
+    st.subheader("Sprints Existentes")
+    for sprint in st.session_state.sprints:
+        st.write(f"- {sprint}")
 
-elif aba_selecionada == "Tickets":
-    st.header("Gestão de Tickets")
-    st.write("### Informações dos Tickets")
-    st.dataframe(tickets)
+# Função para exibir a interface simplificada por ticket
+def montar_sprint(sprint_name):
+    st.title(f"Montar Sprint: {sprint_name}")
+    
+    # CSS para o layout do grid
+    st.markdown("""
+    <style>
+    .grid-cell {
+        width: 100%;
+        height: 60px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        text-align: center;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    .grid-cell input[type="number"] {
+        width: 100%;
+        height: 36px;
+        text-align: center;
+        font-size: 14px;
+        padding: 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .grid-cell .stCheckbox {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 36px;
+    }
+    .grid-cell .stCheckbox > label {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+    }
+    .grid-cell .stCheckbox > label > div {
+        width: 24px;
+        height: 24px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    num_tickets = st.number_input('Número de tickets', min_value=1, value=1, step=1)
+    
+    # Inicializa os dados dos tickets se ainda não foi feito
+    for i in range(1, num_tickets + 1):
+        ticket_id = f"Ticket_{i}"
+        if ticket_id not in st.session_state.sprints[sprint_name]:
+            st.session_state.sprints[sprint_name][ticket_id] = {
+                categoria: {
+                    cargo: {'pessoas': 0, 'story_points': [0 for _ in story_points]} 
+                    for cargo in cargos
+                } for categoria, cargos in cargos_salarios.items()
+            }
+    
+    # Interface para definir story points e número de pessoas por ticket
+    for i in range(1, num_tickets + 1):
+        ticket_id = f"Ticket_{i}"
+        with st.expander(f'{ticket_id}'):
+            st.markdown(f"<h5 style='text-align: center;'>Definir número de pessoas e story points para {ticket_id}</h5>", unsafe_allow_html=True)
+            
+            for categoria, cargos in cargos_salarios.items():
+                show_categoria = st.checkbox(f"{categoria}", value=True, key=f"{sprint_name}_{ticket_id}_{categoria}_checkbox")
+                if show_categoria:
+                    # Criar as colunas para a tabela
+                    cols = st.columns([2, 2] + [1.5 for _ in story_points])
 
-else:
-    dados = planilha[aba_selecionada]
+                    # Cabeçalhos
+                    cols[0].markdown("<div class='grid-cell'><b>Cargo</b></div>", unsafe_allow_html=True)
+                    cols[1].markdown("<div class='grid-cell'><b>Nº Pessoas</b></div>", unsafe_allow_html=True)
+                    for j, point in enumerate(story_points):
+                        cols[j + 2].markdown(f"<div class='grid-cell'><b>{point} SP</b></div>", unsafe_allow_html=True)
 
-    # Adicionar uma linha que é a soma das colunas relevantes (Total e custos)
-    soma_colunas = dados[
-        [
-            "Junior",
-            "Pleno",
-            "Senior",
-            "Total",
-            "Custo Junior",
-            "Custo Pleno",
-            "Custo Senior",
-        ]
-    ].sum()
-    soma_linha = pd.DataFrame([soma_colunas], columns=dados.columns)
-    soma_linha["Tarefa"] = "Total"
-    soma_linha["Tarefa"] = "Total"
-    dados = pd.concat([dados, soma_linha], ignore_index=True)
+                    # Para cada cargo, adicionamos o campo de número de pessoas e a matriz de story points
+                    for cargo in cargos:
+                        # Cargo (usando nome abreviado)
+                        cols[0].markdown(f"<div class='grid-cell'>{cargo}</div>", unsafe_allow_html=True)
 
-    st.write("### Tarefas e Desenvolvedores Alocados (com Total)")
-    st.dataframe(dados)
+                        # Número de pessoas
+                        with cols[1]:
+                            num_pessoas = st.number_input(
+                                "", 
+                                min_value=0, 
+                                value=st.session_state.sprints[sprint_name][ticket_id][categoria][cargo]['pessoas'],
+                                step=1, 
+                                key=f"{sprint_name}_{ticket_id}_{categoria}_{cargo}_pessoas", 
+                                label_visibility="collapsed"
+                            )
+                        st.session_state.sprints[sprint_name][ticket_id][categoria][cargo]['pessoas'] = num_pessoas
+                        
+                        # Story points (checkboxes)
+                        for j, point in enumerate(story_points):
+                            with cols[j + 2]:
+                                checked = st.checkbox(
+                                    "", value=st.session_state.sprints[sprint_name][ticket_id][categoria][cargo]['story_points'][j],
+                                    key=f"{sprint_name}_{ticket_id}_{categoria}_{cargo}_{point}_checkbox",
+                                    label_visibility="collapsed"
+                                )
+                            st.session_state.sprints[sprint_name][ticket_id][categoria][cargo]['story_points'][j] = checked
 
-    # Calcular o total de horas e custos por desenvolvedor
-    st.write("### Estimativa da Sprint")
+    if st.button("Salvar Sprint"):
+        st.success(f"Sprint '{sprint_name}' salva com sucesso!")
 
-    if (
-        "Junior" in dados.columns
-        and "Pleno" in dados.columns
-        and "Senior" in dados.columns
-    ):
-        total_junior = dados["Junior"].sum()
-        total_pleno = dados["Pleno"].sum()
-        total_senior = dados["Senior"].sum()
-
-        # st.write(f"Total de horas Junior: {total_junior} horas")
-        # st.write(f"Total de horas Pleno: {total_pleno} horas")
-        # st.write(f"Total de horas Senior: {total_senior} horas")
-
-        # Calcular o custo total da sprint
-        custo_junior = total_junior * 119.05  # Valor exemplo por hora
-        custo_pleno = total_pleno * 231.90  # Valor atualizado por hora
-        custo_senior = total_senior * 368.33  # Valor atualizado por hora
-
-        custo_total = custo_junior + custo_pleno + custo_senior
-
-        st.write(f"Custo total Junior: R$ {custo_junior:.2f}")
-        st.write(f"Custo total Pleno: R$ {custo_pleno:.2f}")
-        st.write(f"Custo total Senior: R$ {custo_senior:.2f}")
-        st.write(f"### Custo Total da Sprint: R$ {custo_total:.2f}")
-
-        # Gráficos da Sprint com Plotly (Gráfico de Rosquinha para Distribuição de Custos)
-        fig = go.Figure(
-            data=[
-                go.Pie(
-                    labels=["Junior", "Pleno", "Senior"],
-                    values=[custo_junior, custo_pleno, custo_senior],
-                    hole=0.4,
-                )
-            ]
-        )
-        fig.update_layout(title=f"Distribuição de Custos da Sprint {aba_selecionada}")
-        st.plotly_chart(fig)
-
-        # Gráfico de barras para horas estimadas por tarefa
-        fig = go.Figure(
-            data=[go.Bar(x=dados["Tarefa"], y=dados["Total"], marker_color="coral")]
-        )
-        fig.update_layout(
-            title=f"Horas Estimadas por Tarefa - Sprint {aba_selecionada}",
-            yaxis_title="Horas Estimadas",
-        )
-        st.plotly_chart(fig)
+# Página de orçamento
+def mostrar_orcamento():
+    st.title("Orçamento das Sprints")
+    
+    if not st.session_state.sprints:
+        st.warning("Nenhuma sprint foi criada ainda. Por favor, crie uma sprint primeiro.")
+        return
+    
+    sprint_selecionada = st.selectbox("Selecione a sprint para ver o orçamento:", 
+                                      ["Todas as Sprints"] + list(st.session_state.sprints.keys()))
+    
+    if sprint_selecionada == "Todas as Sprints":
+        sprints_para_calcular = st.session_state.sprints
     else:
-        st.write(
-            "As colunas 'Junior', 'Pleno' e 'Senior' são necessárias para o cálculo de custos."
-        )
+        sprints_para_calcular = {sprint_selecionada: st.session_state.sprints[sprint_selecionada]}
+    
+    total_orcamento_geral = 0
+    total_horas_geral = 0
+    
+    for sprint_name, sprint_data in sprints_para_calcular.items():
+        st.subheader(f"Orçamento para Sprint: {sprint_name}")
+        total_orcamento_sprint = 0
+        total_horas_sprint = 0
+        
+        for ticket_id, ticket_data in sprint_data.items():
+            st.write(f"Ticket: {ticket_id}")
+            ticket_total = 0
+            ticket_horas = 0
+            
+            for categoria, cargos in ticket_data.items():
+                for cargo, dados in cargos.items():
+                    num_pessoas = dados['pessoas']
+                    story_points_cargo = sum([sp * checked for sp, checked in zip(story_points, dados['story_points'])])
+                    horas = story_points_cargo  # Agora cada story point é 1 hora
+                    custo = horas * num_pessoas * (st.session_state.salarios[categoria][cargo] / 8)  # Custo por hora
+                    ticket_total += custo
+                    ticket_horas += horas * num_pessoas
+                    if num_pessoas > 0:
+                        st.write(f"  {num_pessoas} {nomes_completos[cargo]}(s) trabalhando {horas:.2f} horas - Custo: R$ {custo:.2f}")
+            
+            st.write(f"Total para {ticket_id}: {ticket_horas:.2f} horas - Custo: R$ {ticket_total:.2f}")
+            total_orcamento_sprint += ticket_total
+            total_horas_sprint += ticket_horas
+        
+        st.write(f"Total para Sprint {sprint_name}: {total_horas_sprint:.2f} horas - Custo: R$ {total_orcamento_sprint:.2f}")
+        total_orcamento_geral += total_orcamento_sprint
+        total_horas_geral += total_horas_sprint
+        st.write("---")
+    
+    if sprint_selecionada == "Todas as Sprints":
+        st.subheader("Resumo Geral")
+        st.write(f"Total de horas de todas as Sprints: {total_horas_geral:.2f} horas")
+        st.write(f"Custo total de todas as Sprints: R$ {total_orcamento_geral:.2f}")
+        
+        # Cálculo do custo médio por hora
+        custo_medio_hora = total_orcamento_geral / total_horas_geral if total_horas_geral > 0 else 0
+        st.write(f"Custo médio por hora: R$ {custo_medio_hora:.2f}")
+
+# Menu de navegação
+st.sidebar.title("Navegação")
+page = st.sidebar.radio("Escolha a página", ["Gerenciar Sprints", "Configurar Salários", "Montar Sprint", "Orçamento"])
+
+if page == "Gerenciar Sprints":
+    listar_sprints()
+elif page == "Configurar Salários":
+    configurar_salarios()
+elif page == "Montar Sprint":
+    if st.session_state.sprints:
+        sprint_selecionada = st.sidebar.selectbox("Selecione a sprint para montar:", list(st.session_state.sprints.keys()))
+        montar_sprint(sprint_selecionada)
+    else:
+        st.warning("Nenhuma sprint foi criada ainda. Por favor, crie uma sprint primeiro na página 'Gerenciar Sprints'.")
+elif page == "Orçamento":
+    mostrar_orcamento()
